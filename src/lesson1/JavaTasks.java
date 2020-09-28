@@ -1,6 +1,14 @@
 package lesson1;
 
+import com.sun.istack.internal.NotNull;
 import kotlin.NotImplementedError;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class JavaTasks {
@@ -34,8 +42,49 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-    static public void sortTimes(String inputName, String outputName) {
-        throw new NotImplementedError();
+    static public void sortTimes(String inputName, String outputName) throws IOException {
+        String regex = "(0[1-9]|1[0-2]):([0-5]\\d):[0-5]\\d [PA]M";
+        int midDay = 12 * 3600;
+        BufferedReader reader = new BufferedReader(new FileReader(inputName));
+        List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
+        System.out.println(text);
+        int[] times = new int[text.size()]; // O(N) - ресурсоемкость
+        int i = 0;
+        for (String line : text) {
+            // O(N) - ресурсоемкость
+            if (!Pattern.matches(regex, line)) {
+                throw new IllegalArgumentException();
+            }
+            String[] split = line.split(" ");
+            String[] digits = split[0].split(":");
+            if (digits[0].equals("12"))
+                digits[0] = "00";
+            int fullTime = 0;
+            for (int j = 0; j < 3; j++) {
+                fullTime = fullTime * 60 + Integer.parseInt(digits[j]);
+            }
+            if (split[1].equals("PM")) {
+                fullTime += midDay;
+            }
+            times[i++] = fullTime % (midDay * 2);
+        }
+        text.clear();
+        Sorts.mergeSort(times);
+        //O(N*log(N)) - трудоемкость
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputName));
+        for (int time : times) {
+            //O(N) - трудоемкость
+            Integer hours = (time / 3600) % 12;
+            if (hours.equals(0))
+                hours = 12;
+            Integer minutes = time / 60 % 60;
+            Integer seconds = time % 60;
+            String end = (time / midDay == 0) ? "AM" : "PM";
+            writer.write(String.format("%02d:%02d:%02d ", hours, minutes, seconds) + end);
+            writer.newLine();
+        }
+        writer.close(); // O(N) - ресурсоемкость
+        // O(N) + O(N*log(N)) + O(N) = O(N*logN) - трудоемкость
     }
 
     /**
@@ -64,8 +113,125 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-    static public void sortAddresses(String inputName, String outputName) {
-        throw new NotImplementedError();
+    static class Address implements Comparable {
+
+        public Address(String s, int i) {
+            this.street = s;
+            this.house = i;
+        }
+
+        String street;
+
+        Integer house;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Address address = (Address) o;
+            return Objects.equals(street, address.street) &&
+                    Objects.equals(house, address.house);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(street, house);
+        }
+
+        @Override
+        public int compareTo(@NotNull Object o) {
+            if (getClass() != o.getClass()) throw new IllegalArgumentException();
+            Address address = (Address) o;
+            return (street.compareTo(address.street) == 0) ? house.compareTo(address.house) : street.compareTo(address.street);
+        }
+
+        @Override
+        public String toString() {
+            return street + " " + house;
+        }
+    }
+
+    static class Human implements Comparable {
+
+        String surname;
+
+        String name;
+
+        public Human(String s, String s1) {
+            surname = s;
+            name = s1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Human human = (Human) o;
+            return Objects.equals(surname, human.surname) &&
+                    Objects.equals(name, human.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(surname, name);
+        }
+
+        @Override
+        public int compareTo(@NotNull Object o) {
+            if (getClass() != o.getClass()) throw new IllegalArgumentException();
+            Human human = (Human) o;
+            return (surname.compareTo(human.surname) == 0) ? name.compareTo(human.name) : surname.compareTo(human.surname);
+        }
+
+        @Override
+        public String toString() {
+            return surname + " " + name;
+        }
+    }
+
+    static public void sortAddresses(String inputName, String outputName) throws IOException {
+        String regex = "[А-ЯЁA-Z][а-яА-ЯёЁ\\w]+ [А-ЯЁA-Z][а-яА-ЯёЁ\\w]+ - [А-ЯЁA-Z][а-яА-ЯёЁ\\w\\-]+ \\d+";
+        InputStreamReader sr = new InputStreamReader(new FileInputStream(inputName), StandardCharsets.UTF_8);
+        BufferedReader reader = new BufferedReader(sr);
+        List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
+        List<Address> keys = new ArrayList<>(); // O(N) (в худшем сл.) - ресурсоемкость
+        Map<Address, List<Human>> addressHumanMap = new HashMap<>();
+        // O(N) (учитывая вложенные объекты Human) - ресурсоемкость
+        for (String line : text) {
+            //O(N) - трудоемкость
+            Pattern rg = Pattern.compile(regex);
+            Matcher m = rg.matcher(line);
+            if (!Pattern.matches(regex, line))
+                throw new IllegalArgumentException();
+            String[] split = line.split(" ");
+            Address address = new Address(split[3], Integer.parseInt(split[4]));
+            Human human = new Human(split[0], split[1]);
+            if (!addressHumanMap.containsKey(address)) {
+                addressHumanMap.put(address, new ArrayList<>());
+                keys.add(address);
+            }
+            addressHumanMap.get(address).add(human);
+        }
+        keys.sort(Address::compareTo);
+        //O(N*log(N)) - трудоемкость
+        OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(outputName), StandardCharsets.UTF_8);
+        BufferedWriter writer = new BufferedWriter(os);
+        for (Address address : keys) {
+            //O(N) с учетом внутр.цикла - трудоемкость
+            StringBuilder sb = new StringBuilder();
+            sb.append(address.toString());
+            sb.append(" - ");
+            addressHumanMap.get(address).sort(Human::compareTo);
+            for (Human human : addressHumanMap.get(address)) {
+                sb.append(human.toString());
+                sb.append(", ");
+            }
+            String string = sb.toString();
+            writer.write(string.substring(0, string.length() - 2));
+            writer.newLine();
+        }
+        writer.close(); // O(N) - ресурсоемкость
+        // O(N) + O(N*log(N)) + O(N) = O(N*logN) - трудоемкость
     }
 
     /**
@@ -131,8 +297,56 @@ public class JavaTasks {
      * 2
      * 2
      */
-    static public void sortSequence(String inputName, String outputName) {
-        throw new NotImplementedError();
+    static public void sortSequence(String inputName, String outputName) throws IOException {
+        String regex = "\\d+";
+        BufferedReader reader = new BufferedReader(new FileReader(inputName));
+        List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
+        int max = 0; // K = max
+        int[] nums1 = new int[text.size()]; // O(N) - ресурсоемкость
+        for (int i = 0; i < nums1.length; i++) {
+            //O(N) - трудоемкость
+            String s = text.get(i);
+            if (!Pattern.matches(regex, s))
+                throw new IllegalArgumentException();
+            int num = Integer.parseInt(s);
+            nums1[i] = num;
+            if (num > max) {
+                max = num;
+            }
+        }
+        int[] numsCounts = new int[max]; //O(K) - ресурсоемкость
+        for (int value : nums1) {
+            //O(N) - трудоемкость
+            numsCounts[value - 1]++;
+        }
+        max = 0;
+        int neededNum = 0;
+        for (int i = 0; i < numsCounts.length; i++) {
+            //O(K) - трудоемкость
+            if (numsCounts[i] > max) {
+                max = numsCounts[i];
+                neededNum = i + 1;
+            }
+        }
+        String res = String.valueOf(neededNum);
+        int countOfNum = 0;
+        for (int i = 0; i < text.size(); i++) {
+            //O(N) - трудоемкость
+            if (text.get(i - countOfNum).equals(res)) {
+                text.remove(i - countOfNum);
+                countOfNum++;
+                text.add(res);
+            }
+        }
+        OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(outputName));
+        BufferedWriter writer = new BufferedWriter(os);
+        for (String line : text) {
+            //O(N) - трудоемкость
+            writer.write(line);
+            writer.newLine();
+        }
+        writer.close(); // O(N) + O(K) - ресурсоемкость
+        //O(N) * 4 + O(K) = O(N) + O(K) - трудоемкость
     }
 
     /**
