@@ -299,54 +299,57 @@ public class JavaTasks {
      */
     static public void sortSequence(String inputName, String outputName) throws IOException {
         String regex = "\\d+";
+        // Ассоц. массив <число - кол-во повторений числа>
+        // K - кол-во неповт. чисел
+        Map<Integer, Integer> map = new HashMap<>(); // O(K) - ресурсоемкость (O(N) - в худшем случае, O(1) - в лучшем)
         BufferedReader reader = new BufferedReader(new FileReader(inputName));
         List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
-        int max = 0; // K = max
-        int[] nums1 = new int[text.size()]; // O(N) - ресурсоемкость
-        for (int i = 0; i < nums1.length; i++) {
-            //O(N) - трудоемкость
-            String s = text.get(i);
+        for (String s : text) {
+            // O(N) - трудоемкость
             if (!Pattern.matches(regex, s))
                 throw new IllegalArgumentException();
-            int num = Integer.parseInt(s);
-            nums1[i] = num;
-            if (num > max) {
-                max = num;
-            }
+            Integer num = Integer.parseInt(s);
+            map.merge(num, 1, Integer::sum);
         }
-        int[] numsCounts = new int[max]; //O(K) - ресурсоемкость
-        for (int value : nums1) {
-            //O(N) - трудоемкость
-            numsCounts[value - 1]++;
+        // Чтобы провести сортировку на массиве, создаем массив (мн-во исходных чисел) и присваиваем туда все ключи
+        int[] nums = new int[map.size()]; // O(K) - ресурсоемкость
+        int i = 0;
+        for (Integer key : map.keySet()) {
+            // O(K) - трудоемкость
+            nums[i++] = key;
         }
-        max = 0;
+        // Сортировка массива
+        Sorts.mergeSort(nums);
+        // O(K*log(K)) - трудоемкость
+        int maxCount = 0;
         int neededNum = 0;
-        for (int i = 0; i < numsCounts.length; i++) {
-            //O(K) - трудоемкость
-            if (numsCounts[i] > max) {
-                max = numsCounts[i];
-                neededNum = i + 1;
+        for (i = 0; i < nums.length; i++) {
+            // O(K) - трудоемкость
+            if (map.get(nums[i]) > maxCount) {
+                maxCount = map.get(nums[i]);
+                neededNum = nums[i];
             }
         }
         String res = String.valueOf(neededNum);
-        int countOfNum = 0;
-        for (int i = 0; i < text.size(); i++) {
-            //O(N) - трудоемкость
-            if (text.get(i - countOfNum).equals(res)) {
-                text.remove(i - countOfNum);
-                countOfNum++;
-                text.add(res);
-            }
-        }
         OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(outputName));
         BufferedWriter writer = new BufferedWriter(os);
+        i = 0;
         for (String line : text) {
             //O(N) - трудоемкость
+            if (text.get(i++).equals(res)) {
+                continue;
+            }
             writer.write(line);
             writer.newLine();
         }
-        writer.close(); // O(N) + O(K) - ресурсоемкость
-        //O(N) * 4 + O(K) = O(N) + O(K) - трудоемкость
+        for (i = 0; i < maxCount; i++) {
+            // O(maxCount) - трудоемкость (O(N) - в худшем случае, O(1) - в лучшем)
+            writer.write(res);
+            writer.newLine();
+        }
+        writer.close();// O(K) + O(N) + O(K) = O(N) - ресурсоемкость
+        // O(N) + O(K) + O(K*log(K)) + O(K) + O(N) + O(maxCount) = O(N) + O(K*log(K))
+        // (верхняя оценка - O(N*log(N))) - трудоемкость
     }
 
     /**

@@ -45,6 +45,21 @@ abstract class AbstractTaskTests : AbstractFileTests() {
         } finally {
             File("temp.txt").delete()
         }
+        try {
+            sortTimes("input/time_in_myTest.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                     12:00:00 AM
+                     04:54:11 AM
+                     12:47:00 PM
+                     01:00:00 PM
+                     04:20:19 PM
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
     }
 
     protected fun sortAddresses(sortAddresses: (String, String) -> Unit) {
@@ -70,6 +85,19 @@ abstract class AbstractTaskTests : AbstractFileTests() {
         try {
             sortAddresses("input/addr_in3.txt", "temp.txt")
             assertFileContent("temp.txt", File("input/addr_out3.txt").readLines())
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
+            sortAddresses("input/addr_in_myTest.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    Строителей 12 - Егоров Руслан
+                    Строителей 25 - Иванов Алексей, Иванов Петр
+                    Тухачевского 16 - Ермолаева Екатерина, Симонова Елизавета
+                """.trimIndent()
+            )
         } finally {
             File("temp.txt").delete()
         }
@@ -272,6 +300,32 @@ abstract class AbstractTaskTests : AbstractFileTests() {
                         41
                         32
                         32
+                    """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
+            sortSequence("input/seq_in_myTest.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                        34
+                        11
+                        88
+                        333
+                        33
+                        333
+                        34
+                        23
+                        34
+                        11
+                        333
+                        333
+                        162
+                        162
+                        162
+                        162
                     """.trimIndent()
             )
         } finally {

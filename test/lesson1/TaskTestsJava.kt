@@ -32,6 +32,8 @@ class TaskTestsJava : AbstractTaskTests() {
     @Test
     @Tag("2")
     fun testMergeArraysJava() {
-        //mergeArrays { first, second -> JavaTasks.mergeArrays(first, second) }
+        // К сожалению, пока не поняла, как еще исправить ошибку, которая возникает,
+        // если оставить просто JavaTasks.mergeArrays(first, second)
+        mergeArrays { first, second -> JavaTasks.mergeArrays(first, second.map { it!! }.toTypedArray()) }
     }
 }
