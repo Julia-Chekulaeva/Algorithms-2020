@@ -2,6 +2,9 @@
 
 package lesson2
 
+import kotlin.math.min
+import kotlin.math.sqrt
+
 /**
  * Получение наибольшей прибыли (она же -- поиск максимального подмассива)
  * Простая
@@ -95,7 +98,24 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  * вернуть ту из них, которая встречается раньше в строке first.
  */
 fun longestCommonSubstring(first: String, second: String): String {
-    TODO()
+    var maxLength = 0
+    var index = 0
+    val firstLength = first.length
+    val secondLength = second.length
+    for (i in first.indices) {
+        for (j in i until secondLength) {
+            val limit = min(firstLength - i, secondLength - j)
+            var length = 0
+            while (length < limit && first[i + length] == second[j + length]) {
+                length++
+            }
+            if (length > maxLength) {
+                maxLength = length
+                index = i
+            }
+        }
+    }
+    return first.substring(index, index + maxLength)
 }
 
 /**
@@ -109,5 +129,20 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Единица простым числом не считается.
  */
 fun calcPrimesNumber(limit: Int): Int {
-    TODO()
+    val listOfPrimes = mutableListOf<Int>()
+    var rootInd = 0 // Индекс первого элемента после корня числа
+    loop@
+    for (i in 2..limit) {
+        val sqrt = sqrt(i.toDouble()).toInt()
+        while (rootInd < listOfPrimes.size && listOfPrimes[rootInd] <= sqrt) {
+            rootInd++
+        }
+        for (j in 0 until rootInd) {
+            val prime = listOfPrimes[j]
+            if (i % prime == 0)
+                continue@loop
+        }
+        listOfPrimes.add(i)
+    }
+    return listOfPrimes.size
 }
