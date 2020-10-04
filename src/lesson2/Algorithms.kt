@@ -84,13 +84,6 @@ fun optimizeBuyAndSell(inputName: String): Pair<Int, Int> {
  */
 fun josephTask(menNumber: Int, choiceInterval: Int): Int {
     TODO()
-    val list = MutableList(menNumber) { index -> index + 1 }
-    var stopIndex = 0
-    while (list.size > 1) {
-        stopIndex = (choiceInterval + stopIndex - 1) % list.size
-        list.removeAt(stopIndex)
-    }
-    return list[0]
 }
 
 /**
