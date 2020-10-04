@@ -84,6 +84,13 @@ fun optimizeBuyAndSell(inputName: String): Pair<Int, Int> {
  */
 fun josephTask(menNumber: Int, choiceInterval: Int): Int {
     TODO()
+    val list = MutableList(menNumber) { index -> index + 1 }
+    var stopIndex = 0
+    while (list.size > 1) {
+        stopIndex = (choiceInterval + stopIndex - 1) % list.size
+        list.removeAt(stopIndex)
+    }
+    return list[0]
 }
 
 /**
@@ -98,16 +105,20 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  * вернуть ту из них, которая встречается раньше в строке first.
  */
 fun longestCommonSubstring(first: String, second: String): String {
-    var maxLength = 0
+    var maxLength = 0 // K = maxLength
     var index = 0
     val firstLength = first.length
     val secondLength = second.length
+    // O(1) - ресурсоемкость
     for (i in first.indices) {
-        for (j in i until secondLength) {
+        for (j in 0 until secondLength) {
+            // O(N*M) - трудоемкость
             val limit = min(firstLength - i, secondLength - j)
             var length = 0
+            // O(1) - ресурсоемкость
             while (length < limit && first[i + length] == second[j + length]) {
                 length++
+                // O(N*M*K) - трудоемкость
             }
             if (length > maxLength) {
                 maxLength = length
@@ -116,6 +127,8 @@ fun longestCommonSubstring(first: String, second: String): String {
         }
     }
     return first.substring(index, index + maxLength)
+    // O(1) - ресурсоемкость
+    // O(N*M*K) - трудоемкость
 }
 
 /**
@@ -129,20 +142,31 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Единица простым числом не считается.
  */
 fun calcPrimesNumber(limit: Int): Int {
-    val listOfPrimes = mutableListOf<Int>()
+    // N = limit, K - кол-во простых чисел, L - кол-во простых чисел от 2 до sqrt(N)
+    val listOfPrimesUntilRoot = mutableListOf<Int>() // O(L) - ресурсоемкость
+    val sqrt = sqrt(limit.toDouble()).toInt()
+    var res = 0
     var rootInd = 0 // Индекс первого элемента после корня числа
     loop@
     for (i in 2..limit) {
-        val sqrt = sqrt(i.toDouble()).toInt()
-        while (rootInd < listOfPrimes.size && listOfPrimes[rootInd] <= sqrt) {
+        // O(N) - трудоемкость
+        val sqrt2 = sqrt(i.toDouble()).toInt()
+        while (rootInd < listOfPrimesUntilRoot.size && listOfPrimesUntilRoot[rootInd] <= sqrt2) {
             rootInd++
+            // O(sqrt(N)) - трудоемкость (т.к. общее кол-во раз, когда этот цикл выполн. - sqrt(N))
+            // Этот цикл позволяет уменьшить кол-во итераций следующего цикла на ранних стадиях,
+            // т.е. сократить трудоемкость примерно в 2 раза.
         }
         for (j in 0 until rootInd) {
-            val prime = listOfPrimes[j]
-            if (i % prime == 0)
+            // O(N*L) - трудоемкость (верхняя оценка)
+            if (i % listOfPrimesUntilRoot[j] == 0)
                 continue@loop
         }
-        listOfPrimes.add(i)
+        res++
+        if (i <= sqrt)
+            listOfPrimesUntilRoot.add(i)
     }
-    return listOfPrimes.size
+    return res
+    // O(L) - ресурсоемкость
+    // O(N) + O(sqrt(N)) + O(N*L) = O(N*L) - трудоемкость (верхняя оценка)
 }
