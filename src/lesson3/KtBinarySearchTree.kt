@@ -1,12 +1,13 @@
 package lesson3
 
 import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.math.max
 
 // attention: Comparable is supported but Comparator is not
 class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSortedSet<T> {
 
-    private class Node<T>(
+    class Node<T>(
         val value: T
     ) {
         var left: Node<T>? = null
@@ -22,6 +23,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         root?.let { find(it, value) }
 
     private fun find(start: Node<T>, value: T): Node<T> {
+        // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
         val comparison = value.compareTo(start.value)
         return when {
             comparison == 0 -> start
@@ -32,6 +34,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
 
     override operator fun contains(element: T): Boolean {
         val closest = find(element)
+        // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
         return closest != null && element.compareTo(closest.value) == 0
     }
 
@@ -47,6 +50,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
      */
     override fun add(element: T): Boolean {
         val closest = find(element)
+        // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
         val comparison = if (closest == null) -1 else element.compareTo(closest.value)
         if (comparison == 0) {
             return false
@@ -80,7 +84,53 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
      * Средняя
      */
     override fun remove(element: T): Boolean {
-        TODO()
+        var closest = root ?: return false
+        var previous = closest
+        var comparison = closest.value.compareTo(element)
+        // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
+        while (comparison != 0) {
+            // O(log(N)) - трудоемкость (средний случай, худший случай - N)
+            previous = closest
+            closest = when {
+                comparison > 0 -> closest.left ?: return false
+                else -> closest.right ?: return false
+            }
+            comparison = closest.value.compareTo(element)
+        }
+        val isRoot = closest == root
+        val isRight = previous.right == closest
+        val right = closest.right
+        val left = closest.left
+        // O(1) - ресурсоемкость
+        val res = when {
+            left == null -> right
+            right == null -> left
+            else -> {
+                var minLeft = right!!
+                var prev = minLeft
+                // O(1) - ресурсоемкость
+                while (minLeft.left != null) {
+                    // O(log(N)) - трудоемскоть (средний случай, худший случай - N)
+                    prev = minLeft
+                    minLeft = minLeft.left!!
+                }
+                if (prev != minLeft) {
+                    prev.left = minLeft.right
+                    minLeft.right = right
+                }
+                minLeft.left = left
+                minLeft
+            }
+        }
+        when {
+            isRoot -> root = res
+            isRight -> previous.right = res
+            else -> previous.left = res
+        }
+        size--
+        return true
+        // O(1) - ресурсоемкость
+        // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
     }
 
     override fun comparator(): Comparator<in T>? =
@@ -90,6 +140,11 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         BinarySearchTreeIterator()
 
     inner class BinarySearchTreeIterator internal constructor() : MutableIterator<T> {
+
+        private var wasDeleted: Boolean = false
+
+        // O(log(N)) - ресурсоемкость в среднем случае, O(N) - в худшем
+        private val way: Stack<Node<T>> = Stack()
 
         /**
          * Проверка наличия следующего элемента
@@ -102,8 +157,20 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          * Средняя
          */
         override fun hasNext(): Boolean {
-            // TODO
-            throw NotImplementedError()
+            if (root == null)
+                return false
+            if (way.isEmpty()) {
+                return true
+            }
+            var node = root!!
+            // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
+            while (node.right != null) {
+                // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+                node = node.right!!
+            }
+            return node != way.peek()
+            // O(1) - ресурсоемкость
+            // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
         }
 
         /**
@@ -120,8 +187,40 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          * Средняя
          */
         override fun next(): T {
-            // TODO
-            throw NotImplementedError()
+            wasDeleted = false
+            var node: Node<T>? = root ?: throw NoSuchElementException()
+            // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
+            if (way.isEmpty()) {
+                while (node != null) {
+                    // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+                    way.push(node)
+                    node = node.left
+                }
+                return way.peek().value
+            }
+            val element = way.pop()
+            // O(1) - ресурсоемкость
+            if (element.right == null) {
+                node = element
+                while (node!!.value <= element.value && way.isNotEmpty()) {
+                    // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+                    node = way.pop()
+                }
+                if (node.value <= element.value)
+                    throw NoSuchElementException()
+                way.push(node)
+                return node.value
+            } else {
+                node = element.right
+                while (node != null) {
+                    // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+                    way.push(node)
+                    node = node.left
+                }
+                return way.peek().value
+            }
+            // O(1) - ресурсоемкость
+            // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
         }
 
         /**
@@ -137,10 +236,42 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          * Сложная
          */
         override fun remove() {
-            // TODO
-            throw NotImplementedError()
+            if (way.isEmpty() || wasDeleted)
+                throw IllegalStateException()
+            val element = way.pop().value
+            // O(1) - ресурсоемкость
+            remove(element)
+            previous(element)
+            wasDeleted = true
+            // O(1) - ресурсоемкость
+            // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+            // У обеих функций такие оценки
         }
 
+        private fun previous(element: T) {
+            if (root == null) return
+            var node = root
+            var extraIters = 0
+            // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
+            way.clear()
+            while (node != null) {
+                // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+                way.add(node)
+                if (node.value > element) {
+                    extraIters++
+                    node = node.left
+                } else {
+                    extraIters = 0
+                    node = node.right
+                }
+            }
+            for (i in 0 until extraIters) {
+                // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+                way.pop()
+            }
+            // O(1) - ресурсоемкость
+            // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
+        }
     }
 
     /**
@@ -159,8 +290,203 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
      *
      * Очень сложная (в том случае, если спецификация реализуется в полном объёме)
      */
+
+    inner class SubTree<T: Comparable<T>>(
+        private val tree: KtBinarySearchTree<T>, private val fromElement: T, private val fromStart: Boolean,
+        private val toElement: T, private val toEnd: Boolean
+    ) : SortedSet<T> {
+
+        private fun inBounds(element: T) =
+            (fromStart || element >= fromElement) && (toEnd || element < toElement)
+        // O(1) - трудоемкость и ресурсоемкость
+
+        override val size: Int
+            get() = getSize(root())
+        // O(N) - трудоемкость
+        // O(log(N)) в среднем и O(N) в худшем случаях - ресурсоемкость (из-за ф-и root)
+
+        private fun getSize(node: Node<T>?): Int {
+            // В результате обходятся все ветви
+            // O(N) - трудоемкость, O(1) - ресурсоемкость
+            if (node == null)
+                return 0
+            return getSize(node.right) + 1 + getSize(node.left)
+        }
+
+        private fun root(): Node<T>? {
+            val node = if (fromStart)
+                tree.root else
+                cutLeftPart(tree.root, fromElement)
+            return if (toEnd)
+                node else
+                cutRightPart(node, toElement)
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+            // (в обоих случаях, при левой и правой "обрезке")
+        }
+
+        override fun add(element: T): Boolean {
+            if (!inBounds(element))
+                throw IllegalArgumentException()
+            return tree.add(element)
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+        }
+
+        override fun addAll(elements: Collection<T>): Boolean {
+            var res = false
+            for (elem in elements) {
+                res = this.add(elem) || res
+            }
+            return res
+            // O(M*log(N)) в среднем и O(M*N) в худшем случаях - трудоемкость и ресурсоемкость
+        }
+
+        override fun contains(element: T): Boolean {
+            return inBounds(element) && tree.contains(element)
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+        }
+
+        override fun removeAll(elements: Collection<T>): Boolean {
+            var res = false
+            for (elem in elements) {
+                res = this.remove(elem) || res
+            }
+            return res
+            // O(M*log(N)) в среднем и O(M*N) в худшем случаях - трудоемкоcть
+            // O(M) - ресурсоемкость
+        }
+
+        override fun first(): T {
+            var current: Node<T> = root() ?: throw NoSuchElementException()
+            while (current.left != null) {
+                current = current.left!!
+            }
+            return current.value
+        }
+
+        override fun remove(element: T): Boolean {
+            return if (inBounds(element))
+                tree.remove(element) else
+                throw IllegalArgumentException()
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкоcть
+            // O(1) - ресурсоемкость
+        }
+
+        override fun retainAll(elements: Collection<T>): Boolean {
+            TODO()
+        }
+
+        override fun last(): T {
+            var current: Node<T> = root() ?: throw NoSuchElementException()
+            while (current.right != null) {
+                current = current.right!!
+            }
+            return current.value
+        }
+
+        override fun clear() {
+            for (elem in tree) {
+                if (inBounds(elem)) {
+                    tree.remove(elem)
+                }
+            }
+        }
+
+        override fun tailSet(fromElement: T): SortedSet<T> {
+            val from = if (fromStart) fromElement else maxOf(fromElement, this.fromElement)
+            return SubTree(
+                tree, from, false,
+                toElement, true
+            )
+        }
+
+        inner class SubTreeIterator<out T> : MutableIterator<T> {
+            private val way: Stack<T> = Stack()
+
+            override fun hasNext(): Boolean {
+                TODO()
+            }
+
+            override fun next(): T {
+                TODO("Not yet implemented")
+            }
+
+            override fun remove() {
+                TODO("Not yet implemented")
+            }
+
+        }
+
+        override fun iterator(): MutableIterator<T> {
+            TODO("Not yet implemented")
+        }
+
+        override fun headSet(toElement: T): SortedSet<T> {
+            val to = if (toEnd) toElement else maxOf(toElement, this.toElement)
+            return SubTree(
+                tree, fromElement, true,
+                to, false
+            )
+        }
+
+        override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
+            val from = if (fromStart) fromElement else maxOf(fromElement, this.fromElement)
+            val to = if (toEnd) toElement else maxOf(toElement, this.toElement)
+            return SubTree(
+                tree, from, false,
+                to, false
+            )
+        }
+
+        override fun containsAll(elements: Collection<T>): Boolean {
+            var res = true
+            for (elem in elements) {
+                res = res && this.contains(elem)
+            }
+            return res
+        }
+
+        override fun isEmpty(): Boolean {
+            return root() == null
+        }
+
+        override fun comparator(): Comparator<in T>? {
+            TODO("Not yet implemented")
+        }
+
+        private fun cutLeftPart(node: Node<T>?, fromElement: T): Node<T>? {
+            // В результате рекурсия доходит до конца дерева
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+            val newNode = Node((node ?: return null).value)
+            newNode.left = node.left
+            newNode.right = node.right
+            if (newNode.value < fromElement) {
+                return cutLeftPart(newNode.right, fromElement)
+            } else {
+                newNode.left = cutLeftPart(newNode.left, fromElement)
+                return newNode
+            }
+        }
+
+        private fun cutRightPart(node: Node<T>?, toElement: T): Node<T>? {
+            // В результате рекурсия доходит до конца дерева
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+            val newNode = Node((node ?: return null).value)
+            newNode.left = node.left
+            newNode.right = node.right
+            if (newNode.value >= toElement) {
+                return cutRightPart(newNode.left, toElement)
+            } else {
+                newNode.right = cutRightPart(newNode.right, toElement)
+                return newNode
+            }
+        }
+    }
+
     override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
-        TODO()
+        if (fromElement > toElement) {
+            throw IllegalArgumentException()
+        }
+        return SubTree(this, fromElement, false, toElement, false)
     }
 
     /**
