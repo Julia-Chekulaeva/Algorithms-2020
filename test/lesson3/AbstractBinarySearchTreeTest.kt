@@ -273,13 +273,15 @@ abstract class AbstractBinarySearchTreeTest {
                 assertThrows<IllegalStateException> { treeIterator.remove() }
             }
         }
+        assertThrows<NoSuchElementException> { treeIterator.next() }
         usualSet.remove(elemToRemove)
         assertFalse { tree.contains(elemToRemove) }
         assertTrue { tree.size == usualSet.size }
+        val treeIterator2 = tree.iterator()
         for (i in usualSet.toSortedSet()) {
             if (i == elemToRemove)
                 continue
-            assertTrue { i == treeIterator.next() }
+            assertTrue { i == treeIterator2.next() }
         }
         //
         for (iteration in 1..100) {
