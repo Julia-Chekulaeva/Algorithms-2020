@@ -47,7 +47,6 @@ public class JavaTasks {
         int midDay = 12 * 3600;
         BufferedReader reader = new BufferedReader(new FileReader(inputName));
         List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
-        System.out.println(text);
         int[] times = new int[text.size()]; // O(N) - ресурсоемкость
         int i = 0;
         for (String line : text) {
@@ -151,52 +150,14 @@ public class JavaTasks {
         }
     }
 
-    static class Human implements Comparable {
-
-        String surname;
-
-        String name;
-
-        public Human(String s, String s1) {
-            surname = s;
-            name = s1;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Human human = (Human) o;
-            return Objects.equals(surname, human.surname) &&
-                    Objects.equals(name, human.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(surname, name);
-        }
-
-        @Override
-        public int compareTo(@NotNull Object o) {
-            if (getClass() != o.getClass()) throw new IllegalArgumentException();
-            Human human = (Human) o;
-            return (surname.compareTo(human.surname) == 0) ? name.compareTo(human.name) : surname.compareTo(human.surname);
-        }
-
-        @Override
-        public String toString() {
-            return surname + " " + name;
-        }
-    }
-
     static public void sortAddresses(String inputName, String outputName) throws IOException {
         String regex = "[А-ЯЁA-Z][а-яА-ЯёЁ\\w]+ [А-ЯЁA-Z][а-яА-ЯёЁ\\w]+ - [А-ЯЁA-Z][а-яА-ЯёЁ\\w\\-]+ \\d+";
         InputStreamReader sr = new InputStreamReader(new FileInputStream(inputName), StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(sr);
         List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
         List<Address> keys = new ArrayList<>(); // O(N) (в худшем сл.) - ресурсоемкость
-        Map<Address, List<Human>> addressHumanMap = new HashMap<>();
-        // O(N) (учитывая вложенные объекты Human) - ресурсоемкость
+        Map<Address, List<String>> addressHumanMap = new HashMap<>();
+        // O(N) (учитывая вложенные объекты String (люди)) - ресурсоемкость
         for (String line : text) {
             //O(N) - трудоемкость
             Pattern rg = Pattern.compile(regex);
@@ -205,7 +166,7 @@ public class JavaTasks {
                 throw new IllegalArgumentException();
             String[] split = line.split(" ");
             Address address = new Address(split[3], Integer.parseInt(split[4]));
-            Human human = new Human(split[0], split[1]);
+            String human = split[0] + " " + split[1];
             if (!addressHumanMap.containsKey(address)) {
                 addressHumanMap.put(address, new ArrayList<>());
                 keys.add(address);
@@ -221,9 +182,9 @@ public class JavaTasks {
             StringBuilder sb = new StringBuilder();
             sb.append(address.toString());
             sb.append(" - ");
-            addressHumanMap.get(address).sort(Human::compareTo);
-            for (Human human : addressHumanMap.get(address)) {
-                sb.append(human.toString());
+            addressHumanMap.get(address).sort(String::compareTo);
+            for (String human : addressHumanMap.get(address)) {
+                sb.append(human);
                 sb.append(", ");
             }
             String string = sb.toString();
@@ -264,8 +225,30 @@ public class JavaTasks {
      * 99.5
      * 121.3
      */
-    static public void sortTemperatures(String inputName, String outputName) {
-        throw new NotImplementedError();
+    static public void sortTemperatures(String inputName, String outputName) throws IOException {
+        //String regex = "-?/d[1-3]"
+        BufferedReader reader = new BufferedReader(new FileReader(inputName));
+        List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
+        int[] temperatures = new int[text.size()]; // O(N) - ресурсоемкость
+        for (int i = 0; i < text.size(); i++) {
+            String line = text.get(i);
+            temperatures[i] = (int) (Double.parseDouble(line) * 10) + 2730;
+        }
+        temperatures = Sorts.countingSort(temperatures, 7730);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputName));
+        for (int value : temperatures) {
+            int temperature = Math.abs(value - 2730);
+            StringBuilder sb = new StringBuilder();
+            if (value < 2730) {
+                sb.append("-");
+            }
+            sb.append(temperature / 10);
+            sb.append(".");
+            sb.append(temperature % 10);
+            writer.write(sb.toString());
+            writer.newLine();
+        }
+        writer.close();
     }
 
     /**
@@ -300,7 +283,7 @@ public class JavaTasks {
     static public void sortSequence(String inputName, String outputName) throws IOException {
         String regex = "\\d+";
         // Ассоц. массив <число - кол-во повторений числа>
-        // K - кол-во неповт. чисел
+        // K - кол-во разных чисел
         Map<Integer, Integer> map = new HashMap<>(); // O(K) - ресурсоемкость (O(N) - в худшем случае, O(1) - в лучшем)
         BufferedReader reader = new BufferedReader(new FileReader(inputName));
         List<String> text = reader.lines().collect(Collectors.toList()); // O(N) - ресурсоемкость
@@ -311,29 +294,20 @@ public class JavaTasks {
             Integer num = Integer.parseInt(s);
             map.merge(num, 1, Integer::sum);
         }
-        // Чтобы провести сортировку на массиве, создаем массив (мн-во исходных чисел) и присваиваем туда все ключи
-        int[] nums = new int[map.size()]; // O(K) - ресурсоемкость
-        int i = 0;
-        for (Integer key : map.keySet()) {
-            // O(K) - трудоемкость
-            nums[i++] = key;
-        }
-        // Сортировка массива
-        Sorts.mergeSort(nums);
-        // O(K*log(K)) - трудоемкость
         int maxCount = 0;
         int neededNum = 0;
-        for (i = 0; i < nums.length; i++) {
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
             // O(K) - трудоемкость
-            if (map.get(nums[i]) > maxCount) {
-                maxCount = map.get(nums[i]);
-                neededNum = nums[i];
+            if (entry.getValue() > maxCount ||
+                    (entry.getValue() == maxCount && entry.getKey() < neededNum)) {
+                neededNum = entry.getKey();
+                maxCount = entry.getValue();
             }
         }
         String res = String.valueOf(neededNum);
         OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(outputName));
         BufferedWriter writer = new BufferedWriter(os);
-        i = 0;
+        int i = 0;
         for (String line : text) {
             //O(N) - трудоемкость
             if (text.get(i++).equals(res)) {
@@ -347,9 +321,8 @@ public class JavaTasks {
             writer.write(res);
             writer.newLine();
         }
-        writer.close();// O(K) + O(N) + O(K) = O(N) - ресурсоемкость
-        // O(N) + O(K) + O(K*log(K)) + O(K) + O(N) + O(maxCount) = O(N) + O(K*log(K))
-        // (верхняя оценка - O(N*log(N))) - трудоемкость
+        writer.close();// O(K) + O(N) = O(N) - ресурсоемкость
+        // O(N) + O(K) + O(N) + O(maxCount) = O(N) - трудоемкость
     }
 
     /**
