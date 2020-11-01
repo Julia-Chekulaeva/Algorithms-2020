@@ -103,28 +103,9 @@ fun longestCommonSubstring(first: String, second: String): String {
     val firstLength = first.length
     val secondLength = second.length
     // O(1) - ресурсоемкость
-    for (i in 0 until firstLength) {
-        // Движемся по верхней "границе" таблицы со словами
+    for (j in 0 until secondLength) {
+        // Движемся по левой "границе" таблицы
         // В результате проходим таблицу до главной диагонали включительно
-        val limit = min(firstLength - i, secondLength)
-        var length = 0
-        var currentLength = 0
-        while (length < limit) {
-            while (length < limit && first[i + length] == second[length]) {
-                length++
-                currentLength++
-            }
-            if (currentLength > maxLength) {
-                firstIndex = i + length
-                maxLength = currentLength
-            }
-            currentLength = 0
-            length++
-        }
-    }
-    for (j in 1 until secondLength) {
-        // Движемся по левой границе таблицы
-        // Проходим оставшиеся элементы
         val limit = min(firstLength, secondLength - j)
         var length = 0
         var currentLength = 0
@@ -135,6 +116,26 @@ fun longestCommonSubstring(first: String, second: String): String {
             }
             if (currentLength > maxLength) {
                 firstIndex = length
+                maxLength = currentLength
+            }
+            currentLength = 0
+            length++
+        }
+    }
+    for (i in 1 until firstLength) {
+        // Движемся по верхней "границе" таблицы со словами
+        // Проходим оставшиеся элементы
+        val limit = min(firstLength - i, secondLength)
+        var length = 0
+        var currentLength = 0
+        while (length < limit) {
+            while (length < limit && first[i + length] == second[length]) {
+                length++
+                currentLength++
+            }
+            if (currentLength > maxLength ||
+                (currentLength == maxLength && firstIndex > i + length)) {
+                firstIndex = i + length
                 maxLength = currentLength
             }
             currentLength = 0
