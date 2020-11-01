@@ -148,11 +148,11 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         private var wasDeleted: Boolean = false
 
         protected fun hasNext(root: Node<T>?): Boolean {
+            var node = root ?: return false
+            // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
             if (way.isEmpty()) {
                 return true
             }
-            var node = root ?: return false
-            // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
             while (node.right != null) {
                 // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
                 node = node.right!!

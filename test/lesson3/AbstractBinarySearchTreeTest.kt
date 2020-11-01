@@ -108,6 +108,7 @@ abstract class AbstractBinarySearchTreeTest {
     }
 
     protected fun doRemoveTest() {
+        implementationTest { create().remove(0) }
         val tree = KtBinarySearchTree<Int>()
         for (i in 1..100) {
             tree.add(i)
@@ -123,28 +124,6 @@ abstract class AbstractBinarySearchTreeTest {
             assertTrue { tree.contains(i) }
         }
         assertTrue { tree.checkInvariant() }
-        /*tree = KtBinarySearchTree()
-        assertTrue { tree.isEmpty() }
-        var step = 256
-        while (step > 1) {
-            var element = step / 2
-            while (element < 256) {
-                tree.add(element)
-                element += step
-            }
-            step /= 2
-        }
-        assertTrue { tree.remove(64) }
-        assertFalse { tree.remove(64) }
-        for (i in 1..255) {
-            if (i == 64)
-                assertFalse { tree.contains(i) }
-            else
-                assertTrue { tree.contains(i) }
-        }
-        assertTrue { tree.size == 1023 }
-        assertTrue { tree.checkInvariant() }*/
-        implementationTest { create().remove(0) }
         val random = Random()
         for (iteration in 1..100) {
             val controlSet = mutableSetOf<Int>()
@@ -202,26 +181,28 @@ abstract class AbstractBinarySearchTreeTest {
     }
 
     protected fun doIteratorTest() {
-        /*val tree = KtBinarySearchTree<Int>()
+        implementationTest { create().iterator().hasNext() }
+        implementationTest { create().iterator().next() }
+        val tree = KtBinarySearchTree<Int>()
+        val usualSet = mutableSetOf<Int>()
         var index = 256
         while (index > 1) {
             var element = index / 2
             while (element < 256) {
+                usualSet.add(element)
                 tree.add(element)
                 element += index
             }
             index /= 2
         }
         val iterator = tree.iterator()
-        for (i in 1..255) {
+        for (i in usualSet.toSortedSet()) {
             assertTrue { iterator.hasNext() }
             assertTrue { i == iterator.next() }
             assertTrue { tree.contains(i) }
         }
         assertFalse { iterator.hasNext() }
-        assertThrows<NoSuchElementException> { iterator.next() }*/
-        implementationTest { create().iterator().hasNext() }
-        implementationTest { create().iterator().next() }
+        assertThrows<NoSuchElementException> { iterator.next() }
         val random = Random()
         for (iteration in 1..100) {
             val controlSet = TreeSet<Int>()
@@ -263,34 +244,37 @@ abstract class AbstractBinarySearchTreeTest {
     }
 
     protected fun doIteratorRemoveTest() {
-        /*val tree = KtBinarySearchTree<Int>()
+        implementationTest { create().iterator().remove() }
+        val random = Random()
+        val tree = KtBinarySearchTree<Int>()
         var index = 256
+        val usualSet = mutableSetOf<Int>()
         while (index > 1) {
             var element = index / 2
             while (element < 256) {
                 tree.add(element)
+                usualSet.add(element)
                 element += index
             }
             index /= 2
         }
-        val elemToRemove = Random().nextInt(254) + 1
+        val elemToRemove = random.nextInt(254) + 1
         val treeIterator = tree.iterator()
-        for (i in 1..255) {
+        for (i in usualSet.toSortedSet()) {
             assertTrue { i == treeIterator.next() }
             if (i == elemToRemove) {
                 treeIterator.remove()
                 assertThrows<IllegalStateException> { treeIterator.remove() }
             }
         }
+        usualSet.remove(elemToRemove)
         assertFalse { tree.contains(elemToRemove) }
-        assertTrue { tree.size == 254 }
-        for (i in 1..255) {
+        assertTrue { tree.size == usualSet.size }
+        for (i in usualSet.toSortedSet()) {
             if (i == elemToRemove)
                 continue
             assertTrue { i == treeIterator.next() }
-        }*/
-        implementationTest { create().iterator().remove() }
-        val random = Random()
+        }
         for (iteration in 1..100) {
             val controlSet = TreeSet<Int>()
             val removeIndex = random.nextInt(20) + 1
@@ -357,6 +341,7 @@ abstract class AbstractBinarySearchTreeTest {
 
     protected fun doSubSetTest() {
         implementationTest { create().subSet(0, 0) }
+
         assertEquals(
             0, create().subSet(0, 0).size,
             "The subset with the same lower and upper bounds is not empty."
