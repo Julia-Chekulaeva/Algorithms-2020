@@ -442,8 +442,8 @@ abstract class AbstractBinarySearchTreeTest {
             assertTrue { subTree.contains(elem) }
         }
         assertTrue { subTree.size == usualSubSet.size }
-        assertThrows<IllegalArgumentException> { subTree.add(underBound) }
-        assertThrows<IllegalArgumentException> { subTree.add(upperBound - 1) }
+        assertThrows<IllegalArgumentException> { subTree.add(upperBound) }
+        assertThrows<IllegalArgumentException> { subTree.add(underBound - 1) }
         //
         for (iteration in 1..100) {
             val initialSet = create()
