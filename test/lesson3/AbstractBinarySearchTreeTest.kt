@@ -1,5 +1,6 @@
 package lesson3
 
+import kotlinx.html.I
 import java.util.*
 import kotlin.math.abs
 import kotlin.test.*
@@ -109,6 +110,7 @@ abstract class AbstractBinarySearchTreeTest {
 
     protected fun doRemoveTest() {
         implementationTest { create().remove(0) }
+        // Мои тесты
         val tree = KtBinarySearchTree<Int>()
         for (i in 1..100) {
             tree.add(i)
@@ -124,6 +126,7 @@ abstract class AbstractBinarySearchTreeTest {
             assertTrue { tree.contains(i) }
         }
         assertTrue { tree.checkInvariant() }
+        //
         val random = Random()
         for (iteration in 1..100) {
             val controlSet = mutableSetOf<Int>()
@@ -183,6 +186,7 @@ abstract class AbstractBinarySearchTreeTest {
     protected fun doIteratorTest() {
         implementationTest { create().iterator().hasNext() }
         implementationTest { create().iterator().next() }
+        // Мои тесты
         val tree = KtBinarySearchTree<Int>()
         val usualSet = mutableSetOf<Int>()
         var index = 256
@@ -203,6 +207,7 @@ abstract class AbstractBinarySearchTreeTest {
         }
         assertFalse { iterator.hasNext() }
         assertThrows<NoSuchElementException> { iterator.next() }
+        //
         val random = Random()
         for (iteration in 1..100) {
             val controlSet = TreeSet<Int>()
@@ -246,6 +251,7 @@ abstract class AbstractBinarySearchTreeTest {
     protected fun doIteratorRemoveTest() {
         implementationTest { create().iterator().remove() }
         val random = Random()
+        // Мои тесты
         val tree = KtBinarySearchTree<Int>()
         var index = 256
         val usualSet = mutableSetOf<Int>()
@@ -275,6 +281,7 @@ abstract class AbstractBinarySearchTreeTest {
                 continue
             assertTrue { i == treeIterator.next() }
         }
+        //
         for (iteration in 1..100) {
             val controlSet = TreeSet<Int>()
             val removeIndex = random.nextInt(20) + 1
@@ -341,7 +348,6 @@ abstract class AbstractBinarySearchTreeTest {
 
     protected fun doSubSetTest() {
         implementationTest { create().subSet(0, 0) }
-
         assertEquals(
             0, create().subSet(0, 0).size,
             "The subset with the same lower and upper bounds is not empty."
@@ -392,6 +398,51 @@ abstract class AbstractBinarySearchTreeTest {
     protected fun doSubSetRelationTest() {
         implementationTest { create().subSet(0, 0) }
         val random = Random()
+        // Мои тесты
+        val tree = KtBinarySearchTree<Int>()
+        val usualSet = sortedSetOf<Int>()
+        for (i in 0 until 100) {
+            val elem = random.nextInt(1000)
+            tree.add(elem)
+            usualSet.add(elem)
+        }
+        val upperBound = random.nextInt(1000)
+        val underBound = random.nextInt(upperBound)
+        val subTree = tree.subSet(underBound, upperBound)
+        val usualSubSet = usualSet.subSet(underBound, upperBound)
+        for (i in 0 until 100) {
+            val elem = random.nextInt(1000)
+            if (usualSet.contains(elem))
+                continue
+            tree.add(elem)
+            usualSet.add(elem)
+        }
+        for (i in 0 until 100) {
+            val elem = random.nextInt(1000)
+            tree.remove(elem)
+            usualSet.remove(elem)
+            assertFalse { subTree.contains(elem) }
+        }
+        for (i in 0 until 100) {
+            val elem = random.nextInt(upperBound - underBound) + underBound
+            if (usualSet.contains(elem))
+                continue
+            subTree.add(elem)
+            usualSubSet.add(elem)
+        }
+        for (i in 0 until 100) {
+            val elem = random.nextInt(upperBound - underBound) + underBound
+            subTree.remove(elem)
+            usualSubSet.remove(elem)
+            assertFalse { tree.contains(elem) || subTree.contains(elem) }
+        }
+        for (elem in usualSubSet) {
+            assertTrue { subTree.contains(elem) }
+        }
+        assertTrue { subTree.size == usualSubSet.size }
+        assertThrows<IllegalArgumentException> { subTree.add(underBound) }
+        assertThrows<IllegalArgumentException> { subTree.add(upperBound - 1) }
+        //
         for (iteration in 1..100) {
             val initialSet = create()
             val fromElement = random.nextInt(50)
