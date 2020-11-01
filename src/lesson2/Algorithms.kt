@@ -99,29 +99,51 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  */
 fun longestCommonSubstring(first: String, second: String): String {
     var maxLength = 0 // K = maxLength
-    var index = 0
+    var firstIndex = 0
     val firstLength = first.length
     val secondLength = second.length
     // O(1) - ресурсоемкость
-    for (i in first.indices) {
-        for (j in 0 until secondLength) {
-            // O(N*M) - трудоемкость
-            val limit = min(firstLength - i, secondLength - j)
-            var length = 0
-            // O(1) - ресурсоемкость
-            while (length < limit && first[i + length] == second[j + length]) {
+    for (i in 0 until firstLength) {
+        // Движемся по верхней "границе" таблицы со словами
+        // В результате проходим таблицу до главной диагонали включительно
+        val limit = min(firstLength - i, secondLength)
+        var length = 0
+        var currentLength = 0
+        while (length < limit) {
+            while (length < limit && first[i + length] == second[length]) {
                 length++
-                // O(N*M*K) - трудоемкость
+                currentLength++
             }
-            if (length > maxLength) {
-                maxLength = length
-                index = i
+            if (currentLength > maxLength) {
+                firstIndex = i + length
+                maxLength = currentLength
             }
+            currentLength = 0
+            length++
         }
     }
-    return first.substring(index, index + maxLength)
+    for (j in 1 until secondLength) {
+        // Движемся по левой границе таблицы
+        // Проходим оставшиеся элементы
+        val limit = min(firstLength, secondLength - j)
+        var length = 0
+        var currentLength = 0
+        while (length < limit) {
+            while (length < limit && first[length] == second[j + length]) {
+                length++
+                currentLength++
+            }
+            if (currentLength > maxLength) {
+                firstIndex = length
+                maxLength = currentLength
+            }
+            currentLength = 0
+            length++
+        }
+    }
+    return first.substring(firstIndex - maxLength, firstIndex)
     // O(1) - ресурсоемкость
-    // O(N*M*K) - трудоемкость
+    // O(N*M) - трудоемкость
 }
 
 /**
