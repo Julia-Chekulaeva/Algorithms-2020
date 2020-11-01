@@ -125,14 +125,14 @@ abstract class AbstractBinarySearchTreeTest {
         assertTrue { tree.checkInvariant() }
         tree.clear()
         assertTrue { tree.isEmpty() }
-        var i = 256
-        while (i > 1) {
-            var element = i / 2
+        var step = 256
+        while (step > 1) {
+            var element = step / 2
             while (element < 256) {
                 tree.add(element)
-                element += i
+                element += step
             }
-            i /= 2
+            step /= 2
         }
         assertTrue { tree.remove(64) }
         assertFalse { tree.remove(64) }
@@ -273,21 +273,21 @@ abstract class AbstractBinarySearchTreeTest {
             }
             index /= 2
         }
-        val toRemove = Random().nextInt(254) + 1
-        val iterator = tree.iterator()
+        val elemToRemove = Random().nextInt(254) + 1
+        val treeIterator = tree.iterator()
         for (i in 1..255) {
-            assertTrue { i == iterator.next() }
-            if (i == toRemove) {
-                iterator.remove()
-                assertThrows<IllegalStateException> { iterator.remove() }
+            assertTrue { i == treeIterator.next() }
+            if (i == elemToRemove) {
+                treeIterator.remove()
+                assertThrows<IllegalStateException> { treeIterator.remove() }
             }
         }
-        assertFalse { tree.contains(toRemove) }
+        assertFalse { tree.contains(elemToRemove) }
         assertTrue { tree.size == 254 }
         for (i in 1..255) {
-            if (i == toRemove)
+            if (i == elemToRemove)
                 continue
-            assertTrue { i == iterator.next() }
+            assertTrue { i == treeIterator.next() }
         }
         implementationTest { create().iterator().remove() }
         val random = Random()
