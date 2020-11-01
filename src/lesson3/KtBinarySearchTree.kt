@@ -51,6 +51,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
     override fun add(element: T): Boolean {
         val closest = find(element)
         // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+        // В остальной функции - O(1)
         val comparison = if (closest == null) -1 else element.compareTo(closest.value)
         if (comparison == 0) {
             return false
@@ -379,7 +380,13 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         }
 
         override fun retainAll(elements: Collection<T>): Boolean {
-            TODO()
+            var res = false
+            for (elem in elements) {
+                if (inBounds(elem)) {
+                    res = remove(elem) || res
+                }
+            }
+            return res
         }
 
         override fun last(): T {
@@ -455,7 +462,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         }
 
         override fun comparator(): Comparator<in T>? {
-            TODO("Not yet implemented")
+            return null
         }
 
         private fun cutLeftPart(node: Node<T>?, fromElement: T): Node<T>? {
@@ -492,6 +499,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             throw IllegalArgumentException()
         }
         return SubTree(this, fromElement, false, toElement, false)
+        // O(1) - трудоемкость и ресурсоемкость создания
     }
 
     /**

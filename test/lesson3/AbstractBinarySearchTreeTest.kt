@@ -123,7 +123,7 @@ abstract class AbstractBinarySearchTreeTest {
             assertTrue { tree.contains(i) }
         }
         assertTrue { tree.checkInvariant() }
-        tree.clear()
+        /*tree = KtBinarySearchTree()
         assertTrue { tree.isEmpty() }
         var step = 256
         while (step > 1) {
@@ -143,7 +143,7 @@ abstract class AbstractBinarySearchTreeTest {
                 assertTrue { tree.contains(i) }
         }
         assertTrue { tree.size == 1023 }
-        assertTrue { tree.checkInvariant() }
+        assertTrue { tree.checkInvariant() }*/
         implementationTest { create().remove(0) }
         val random = Random()
         for (iteration in 1..100) {
@@ -202,7 +202,7 @@ abstract class AbstractBinarySearchTreeTest {
     }
 
     protected fun doIteratorTest() {
-        val tree = KtBinarySearchTree<Int>()
+        /*val tree = KtBinarySearchTree<Int>()
         var index = 256
         while (index > 1) {
             var element = index / 2
@@ -219,7 +219,7 @@ abstract class AbstractBinarySearchTreeTest {
             assertTrue { tree.contains(i) }
         }
         assertFalse { iterator.hasNext() }
-        assertThrows<NoSuchElementException> { iterator.next() }
+        assertThrows<NoSuchElementException> { iterator.next() }*/
         implementationTest { create().iterator().hasNext() }
         implementationTest { create().iterator().next() }
         val random = Random()
@@ -263,7 +263,7 @@ abstract class AbstractBinarySearchTreeTest {
     }
 
     protected fun doIteratorRemoveTest() {
-        val tree = KtBinarySearchTree<Int>()
+        /*val tree = KtBinarySearchTree<Int>()
         var index = 256
         while (index > 1) {
             var element = index / 2
@@ -288,7 +288,7 @@ abstract class AbstractBinarySearchTreeTest {
             if (i == elemToRemove)
                 continue
             assertTrue { i == treeIterator.next() }
-        }
+        }*/
         implementationTest { create().iterator().remove() }
         val random = Random()
         for (iteration in 1..100) {
