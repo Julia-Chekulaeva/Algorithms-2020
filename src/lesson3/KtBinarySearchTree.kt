@@ -387,22 +387,31 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
                 }
             }
             return res
+            // O(M*log(N)) в среднем и O(M*N) в худшем случаях - трудоемкоcть
+            // O(M) - ресурсоемкость
         }
 
         override fun last(): T {
             var current: Node<T> = root() ?: throw NoSuchElementException()
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость (ф-я root())
             while (current.right != null) {
+                // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость, O(1) - ресурсоемкость
                 current = current.right!!
             }
             return current.value
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
         }
 
         override fun clear() {
             for (elem in tree) {
                 if (inBounds(elem)) {
                     tree.remove(elem)
+                    // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкоcть
+                    // O(1) - ресурсоемкость
                 }
             }
+            // O(N*log(N)) в среднем и O(N^2) в худшем случаях - трудоемкоcть (верхняя оценка)
+            // O(N) - ресурсоемкость (верхняя оценка)
         }
 
         override fun tailSet(fromElement: T): SortedSet<T> {
@@ -411,9 +420,15 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
                 tree, from, false,
                 toElement, true
             )
+            // O(1) - трудоемкость и ресурсоемкость
         }
 
         inner class SubTreeIterator : TreeIterator() {
+            // Для каждой из вспомогательных функций:
+            // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем, O(1) - ресурсоемкость
+            // Для ф-и root():
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
+            // В итоге для каждой из ф-й ниже оценки совпадают с оценками для root()
             override fun hasNext(): Boolean {
                 return hasNext(root())
             }
@@ -438,6 +453,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
                 tree, fromElement, true,
                 to, false
             )
+            // O(1) - трудоемкость и ресурсоемкость
         }
 
         override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
@@ -447,18 +463,23 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
                 tree, from, false,
                 to, false
             )
+            // O(1) - трудоемкость и ресурсоемкость
         }
 
         override fun containsAll(elements: Collection<T>): Boolean {
             var res = true
             for (elem in elements) {
-                res = res && this.contains(elem)
+                if (!res)
+                    return false
+                res = this.contains(elem)
             }
             return res
+            // O(M*log(N)) в среднем и O(M*N) в худшем случаях - трудоемкость и ресурсоемкость
         }
 
         override fun isEmpty(): Boolean {
             return root() == null
+            // O(log(N)) в среднем и O(N) в худшем случаях - трудоемкость и ресурсоемкость
         }
 
         override fun comparator(): Comparator<in T>? {
