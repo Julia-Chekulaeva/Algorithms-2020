@@ -139,24 +139,14 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
     override fun iterator(): MutableIterator<T> =
         BinarySearchTreeIterator()
 
-    inner class BinarySearchTreeIterator internal constructor() : MutableIterator<T> {
-
-        private var wasDeleted: Boolean = false
+    abstract inner class TreeIterator internal constructor() : MutableIterator<T> {
 
         // O(log(N)) - ресурсоемкость в среднем случае, O(N) - в худшем
         private val way: Stack<Node<T>> = Stack()
 
-        /**
-         * Проверка наличия следующего элемента
-         *
-         * Функция возвращает true, если итерация по множеству ещё не окончена (то есть, если вызов next() вернёт
-         * следующий элемент множества, а не бросит исключение); иначе возвращает false.
-         *
-         * Спецификация: [java.util.Iterator.hasNext] (Ctrl+Click по hasNext)
-         *
-         * Средняя
-         */
-        override fun hasNext(): Boolean {
+        private var wasDeleted: Boolean = false
+
+        protected fun hasNext(root: Node<T>?): Boolean {
             if (root == null)
                 return false
             if (way.isEmpty()) {
@@ -173,20 +163,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
         }
 
-        /**
-         * Получение следующего элемента
-         *
-         * Функция возвращает следующий элемент множества.
-         * Так как BinarySearchTree реализует интерфейс SortedSet, последовательные
-         * вызовы next() должны возвращать элементы в порядке возрастания.
-         *
-         * Бросает NoSuchElementException, если все элементы уже были возвращены.
-         *
-         * Спецификация: [java.util.Iterator.next] (Ctrl+Click по next)
-         *
-         * Средняя
-         */
-        override fun next(): T {
+        protected fun next(root: Node<T>?): T {
             wasDeleted = false
             var node: Node<T>? = root ?: throw NoSuchElementException()
             // O(1) - ресурсоемкость (т.к. хранятся только ссылки)
@@ -223,32 +200,20 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
         }
 
-        /**
-         * Удаление предыдущего элемента
-         *
-         * Функция удаляет из множества элемент, возвращённый крайним вызовом функции next().
-         *
-         * Бросает IllegalStateException, если функция была вызвана до первого вызова next() или же была вызвана
-         * более одного раза после любого вызова next().
-         *
-         * Спецификация: [java.util.Iterator.remove] (Ctrl+Click по remove)
-         *
-         * Сложная
-         */
-        override fun remove() {
+        fun remove(root: Node<T>?) {
             if (way.isEmpty() || wasDeleted)
                 throw IllegalStateException()
             val element = way.pop().value
             // O(1) - ресурсоемкость
             remove(element)
-            previous(element)
+            previous(element, root)
             wasDeleted = true
             // O(1) - ресурсоемкость
             // O(log(N)) - трудоемкость в среднем случае, O(N) - в худшем
-            // У обеих функций такие оценки
+            // У обеих функций (remove, previous) такие оценки
         }
 
-        private fun previous(element: T) {
+        private fun previous(element: T, root: Node<T>?) {
             if (root == null) return
             var node = root
             var extraIters = 0
@@ -274,6 +239,44 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         }
     }
 
+    inner class BinarySearchTreeIterator internal constructor() : TreeIterator() {
+
+        /**
+         * Проверка наличия следующего элемента
+         *
+         * Функция возвращает true, если итерация по множеству ещё не окончена (то есть, если вызов next() вернёт
+         * следующий элемент множества, а не бросит исключение); иначе возвращает false.
+         *
+         * Спецификация: [java.util.Iterator.hasNext] (Ctrl+Click по hasNext)
+         *
+         * Средняя
+         */
+        override fun hasNext(): Boolean {
+            return hasNext(root)
+        }
+
+        /**
+         * Получение следующего элемента
+         *
+         * Функция возвращает следующий элемент множества.
+         * Так как BinarySearchTree реализует интерфейс SortedSet, последовательные
+         * вызовы next() должны возвращать элементы в порядке возрастания.
+         *
+         * Бросает NoSuchElementException, если все элементы уже были возвращены.
+         *
+         * Спецификация: [java.util.Iterator.next] (Ctrl+Click по next)
+         *
+         * Средняя
+         */
+        override fun next(): T {
+            return next(root)
+        }
+
+        override fun remove() {
+            remove(root)
+        }
+    }
+
     /**
      * Подмножество всех элементов в диапазоне [fromElement, toElement)
      *
@@ -291,7 +294,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
      * Очень сложная (в том случае, если спецификация реализуется в полном объёме)
      */
 
-    inner class SubTree<T: Comparable<T>>(
+    inner class SubTree(
         private val tree: KtBinarySearchTree<T>, private val fromElement: T, private val fromStart: Boolean,
         private val toElement: T, private val toEnd: Boolean
     ) : SortedSet<T> {
@@ -399,25 +402,23 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             )
         }
 
-        inner class SubTreeIterator<out T> : MutableIterator<T> {
-            private val way: Stack<T> = Stack()
-
+        inner class SubTreeIterator : TreeIterator() {
             override fun hasNext(): Boolean {
-                TODO()
+                return hasNext(root())
             }
 
             override fun next(): T {
-                TODO("Not yet implemented")
+                return next(root())
             }
 
             override fun remove() {
-                TODO("Not yet implemented")
+                remove(root())
             }
 
         }
 
         override fun iterator(): MutableIterator<T> {
-            TODO("Not yet implemented")
+            return SubTreeIterator()
         }
 
         override fun headSet(toElement: T): SortedSet<T> {
