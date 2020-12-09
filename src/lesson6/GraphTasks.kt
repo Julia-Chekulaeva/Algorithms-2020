@@ -150,6 +150,7 @@ fun Graph.deepSearch(currentWay: MutableList<Graph.Vertex>, longest: MutableList
 }
 
 fun Graph.longestSimplePath(): Path {
+    TODO()
     if (vertices.size == 0)
         return Path()
     val longest = mutableListOf<Graph.Vertex>()
