@@ -381,7 +381,6 @@ abstract class AbstractGraphTests {
             val d = addVertex("D")
             val e = addVertex("E")
             addConnection(a, b)
-
             addConnection(a, c)
             addConnection(a, d)
             addConnection(a, e)
