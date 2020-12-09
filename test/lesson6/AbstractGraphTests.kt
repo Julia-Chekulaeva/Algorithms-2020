@@ -258,6 +258,28 @@ abstract class AbstractGraphTests {
             setOf(cross["A"], cross["B"], cross["C"], cross["D"]),
             cross.largestIndependentVertexSet()
         )
+        // Мой тест
+        val fullGraph = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            addConnection(a, b)
+            addConnection(a, c)
+            addConnection(a, d)
+            addConnection(a, e)
+            addConnection(b, c)
+            addConnection(b, d)
+            addConnection(b, e)
+            addConnection(c, d)
+            addConnection(c, e)
+            addConnection(d, e)
+        }.build()
+        assertEquals(
+            setOf(fullGraph["A"]),
+            fullGraph.largestIndependentVertexSet()
+        )
     }
 
     fun longestSimplePath(longestSimplePath: Graph.() -> Path) {

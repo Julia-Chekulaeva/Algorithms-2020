@@ -90,8 +90,29 @@ fun Graph.minimumSpanningTree(): Graph {
  *
  * Эта задача может быть зачтена за пятый и шестой урок одновременно
  */
+
+fun Graph.findLargestIndependentSet(candidates: Set<Graph.Vertex>, current: Set<Graph.Vertex>): Set<Graph.Vertex> {
+    val used = mutableSetOf<Graph.Vertex>()
+    var largest = current
+    for (v in candidates) {
+        used.add(v)
+        val newCandidates = candidates.toMutableSet()
+        newCandidates.removeAll(getNeighbors(v))
+        newCandidates.removeAll(used)
+        val largestCurrent = findLargestIndependentSet(newCandidates, current + v)
+        if (largestCurrent.size > largest.size)
+            largest = largestCurrent
+    }
+    return largest
+}
+
 fun Graph.largestIndependentVertexSet(): Set<Graph.Vertex> {
-    TODO()
+    // Решена по алгоритму Брона-Кербоша
+    val candidates = vertices
+    val current = setOf<Graph.Vertex>()
+    return findLargestIndependentSet(candidates, current)
+    // O(3^(V/3)) - трудоемкость (в худшем случае),
+    // в общем случае O(K), где K - кол-во независимых подмножеств в графе
 }
 
 /**
@@ -114,8 +135,32 @@ fun Graph.largestIndependentVertexSet(): Set<Graph.Vertex> {
  *
  * Ответ: A, E, J, K, D, C, H, G, B, F, I
  */
+fun Graph.deepSearch(currentWay: MutableList<Graph.Vertex>, longest: MutableList<Graph.Vertex>) {
+    val current = currentWay.last()
+    for (v in getNeighbors(current)) {
+        if (!currentWay.contains(v)) {
+            currentWay.add(v)
+            if (currentWay.size > longest.size) {
+                longest.clear()
+                longest.addAll(currentWay)
+            }
+            deepSearch(currentWay, longest)
+        }
+    }
+}
+
 fun Graph.longestSimplePath(): Path {
-    TODO()
+    if (vertices.size == 0)
+        return Path()
+    val longest = mutableListOf<Graph.Vertex>()
+    for (v in vertices) {
+        deepSearch(mutableListOf(v), longest)
+    }
+    var path = Path()
+    for (vertex in longest) {
+        path = Path(path, this, vertex)
+    }
+    return path
 }
 
 /**
