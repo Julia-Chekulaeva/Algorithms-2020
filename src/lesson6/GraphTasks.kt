@@ -145,21 +145,21 @@ fun Graph.deepSearch(currentWay: MutableList<Graph.Vertex>, longest: MutableList
                 longest.addAll(currentWay)
             }
             deepSearch(currentWay, longest)
+            currentWay.removeAt(currentWay.lastIndex)
         }
     }
 }
 
 fun Graph.longestSimplePath(): Path {
-    TODO()
-    if (vertices.size == 0)
-        return Path()
     val longest = mutableListOf<Graph.Vertex>()
     for (v in vertices) {
         deepSearch(mutableListOf(v), longest)
     }
-    var path = Path()
-    for (vertex in longest) {
-        path = Path(path, this, vertex)
+    if (longest.size == 0)
+        return Path()
+    var path = Path(longest[0])
+    for (i in 1 until longest.size) {
+        path = Path(path, this, longest[i])
     }
     return path
 }

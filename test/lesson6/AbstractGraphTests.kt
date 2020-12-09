@@ -259,7 +259,7 @@ abstract class AbstractGraphTests {
             cross.largestIndependentVertexSet()
         )
         // Мой тест
-        val fullGraph = GraphBuilder().apply {
+        val fullEdgeGraph = GraphBuilder().apply {
             val a = addVertex("A")
             val b = addVertex("B")
             val c = addVertex("C")
@@ -277,8 +277,8 @@ abstract class AbstractGraphTests {
             addConnection(d, e)
         }.build()
         assertEquals(
-            setOf(fullGraph["A"]),
-            fullGraph.largestIndependentVertexSet()
+            setOf(fullEdgeGraph["A"]),
+            fullEdgeGraph.largestIndependentVertexSet()
         )
     }
 
@@ -373,6 +373,25 @@ abstract class AbstractGraphTests {
         }.build()
         val longestPath3 = graph3.longestSimplePath()
         assertEquals(6, longestPath3.length)
+        // Мой тест
+        val fullEdgeGraph = GraphBuilder().apply {
+            val a = addVertex("A")
+            val b = addVertex("B")
+            val c = addVertex("C")
+            val d = addVertex("D")
+            val e = addVertex("E")
+            addConnection(a, b)
+            addConnection(a, c)
+            addConnection(a, d)
+            addConnection(a, e)
+            addConnection(b, c)
+            addConnection(b, d)
+            addConnection(b, e)
+            addConnection(c, d)
+            addConnection(c, e)
+            addConnection(d, e)
+        }.build()
+        assertEquals(4, fullEdgeGraph.longestSimplePath().length)
     }
 
     fun baldaSearcher(baldaSearcher: (String, Set<String>) -> Set<String>) {
