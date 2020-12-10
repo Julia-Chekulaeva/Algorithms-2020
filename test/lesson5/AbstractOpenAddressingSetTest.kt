@@ -1,7 +1,9 @@
 package lesson5
 
+import org.junit.jupiter.api.assertThrows
 import ru.spbstu.kotlin.generate.util.nextString
 import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.math.abs
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -76,6 +78,41 @@ abstract class AbstractOpenAddressingSetTest {
                 )
             }
         }
+        // Мои тесты
+        val emptySet = KtOpenAddressingSet<Int>(2)
+        assertFalse { emptySet.remove(random.nextInt()) }
+        assertEquals(0, emptySet.size)
+        val bigSet = KtOpenAddressingSet<Int>(10)
+        val n = 1000
+        val elems = MutableList(n) { random.nextInt() }
+        var size = 0
+        for (i in 0 until n) {
+            bigSet.add(elems[i])
+            if (bigSet.size == size)
+                elems.removeAt(i)
+            else
+                size++
+        }
+        val numbersCount = size
+        for (i in 0 until numbersCount) {
+            val index = random.nextInt(numbersCount - i) + i
+            val a = elems[index]
+            elems[index] = elems[i]
+            elems[i] = a
+        }
+        var notExistingElem = random.nextInt(n)
+        while (notExistingElem in elems) {
+            notExistingElem = random.nextInt(n)
+        }
+        assertFalse { bigSet.remove(notExistingElem) }
+        assertEquals(size, bigSet.size)
+        for (i in 0 until numbersCount) {
+            assertTrue { bigSet.remove(elems[i]) }
+            size--
+            assertFalse { bigSet.contains(elems[i]) }
+            assertTrue { bigSet.containsAll(elems.subList(i + 1, numbersCount)) }
+            assertEquals(size, bigSet.size)
+        }
     }
 
     protected fun doIteratorTest() {
@@ -113,10 +150,40 @@ abstract class AbstractOpenAddressingSetTest {
                 controlSet.isEmpty(),
                 "OpenAddressingSetIterator doesn't traverse the entire set."
             )
-            assertFailsWith<IllegalStateException>("Something was supposedly returned after the elements ended") {
+            // Как я поняла, проверять в данном случае нужно на исключение NoSuchElementException,
+            // а не на IllegalStateException, поэтому я исправила это в тесте ниже.
+            assertFailsWith<NoSuchElementException>("Something was supposedly returned after the elements ended") {
                 openAddressingSetIter.next()
             }
             println("All clear!")
+        }
+        // Мой тест (включает те же тесты для случая, когда элементов много и размер таблицы большой)
+        val n = 10000
+        val mySet = KtOpenAddressingSet<Int>(14)
+        val controlSet = mutableSetOf<Int>()
+        // Проверка пустого множества
+        assertFalse(mySet.iterator().hasNext())
+        // Добавление в множество
+        for (i in 0 until n) {
+            val elem = random.nextInt(n)
+            mySet.add(elem)
+            controlSet.add(elem)
+        }
+        val iterator1 = mySet.iterator()
+        val iterator2 = mySet.iterator()
+        // Проверка, влияет ли вызов hasNext на состояние итератора
+        while (iterator1.hasNext()) {
+            assertEquals(iterator2.next(), iterator1.next())
+        }
+        val newIterator = mySet.iterator()
+        // Проверка, проходит ли итератор по всему множеству
+        while (newIterator.hasNext()) {
+            controlSet.remove(newIterator.next())
+        }
+        assertTrue(controlSet.isEmpty())
+        // Проверка выброса исключения в случае, когда элементы закончились (т.е. следующего эл-та нет)
+        assertFailsWith<NoSuchElementException>("Something was supposedly returned after the elements ended") {
+            newIterator.next()
         }
     }
 
@@ -175,5 +242,31 @@ abstract class AbstractOpenAddressingSetTest {
             }
             println("All clear!")
         }
+        // Мои тесты
+        val mySet = KtOpenAddressingSet<Int>(14)
+        val n = 10000
+        val setForChecking = KtOpenAddressingSet<Int>(14)
+        for (i in 0 until n) {
+            val elem = random.nextInt(n * 10)
+            mySet.add(elem)
+            setForChecking.add(elem)
+        }
+        val iterator = mySet.iterator()
+        val controlIter = setForChecking.iterator()
+        var i = 0
+        var size = setForChecking.size
+        assertThrows<IllegalStateException> { iterator.remove() }
+        for (elem in controlIter) {
+            assertEquals(elem, iterator.next())
+            if (i % 3 == 0) {
+                iterator.remove()
+                size--
+                assertEquals(size, mySet.size)
+                assertThrows<IllegalStateException> { iterator.remove() }
+                assertEquals(size, mySet.size)
+            }
+            i++
+        }
+        assertFalse { iterator.hasNext() }
     }
 }
